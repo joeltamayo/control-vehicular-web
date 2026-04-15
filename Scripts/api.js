@@ -8,7 +8,7 @@
 
 import { showLoader, hideLoader } from './loader.js'
 
-const BASE_URL = 'http://localhost:3000/api' // Cambiar a URL de Render al desplegar
+const BASE_URL = 'https://supervision-vehicular-api.onrender.com' // URL de Render al desplegar
 
 // Función genérica para hacer peticiones a la API con manejo de tokens y loader global. 
 // Intercepta errores 401 para renovar token automáticamente.
