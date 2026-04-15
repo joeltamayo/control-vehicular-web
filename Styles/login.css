@@ -1,0 +1,54 @@
+/* Imagen de fondo*/
+body {
+    min-height: 100vh;
+    background-image: url('../Media/background_login.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+/* Centrado del formulario */
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+/* Estilos tipo card */
+.login-card {
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-5px);
+}
+
+.login .card-header {
+    background-color: var(--color-primary) !important;
+    border-radius: 10px 10px 0 0 !important;
+    border-bottom: 0;
+    color: var(--color-button);
+}
+
+/* Imputs */
+.form-control {
+    border-radius: 5px;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+    border-color: var(--color-button);
+    box-shadow: 0 0 0 0.2rem rgba(50, 62, 72, 0.25);
+}
+
+/* Boton mostrar password */
+.btn-outline-secondary {
+    background-color: var(--color-white) !important;
+    border-color: #dacece;
+    color: var(--color-button) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8faf8 !important;
+}
