@@ -7,6 +7,7 @@
 // ============================================================
 
 import { showLoader, hideLoader } from './loader.js'
+import { irAlLogin } from './router.js'
 
 const BASE_URL = 'https://supervision-vehicular-api.onrender.com/api' // URL de Render al desplegar
 
@@ -38,7 +39,7 @@ async function request(endpoint, options = {}, mensajeLoader = 'Procesando...') 
             if (renovado) {
                 response = await fetch(url, config) // Reintentar la petición original con el nuevo token
             } else {
-                window.location.hash = '#/login' // Si no se pudo renovar el token, redirigir al login
+                irAlLogin() // Si no se pudo renovar el token, redirigir al login
                 return null
             }
         }

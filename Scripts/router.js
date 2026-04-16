@@ -21,14 +21,29 @@ import { renderGuardia } from './views/guardia.js' // Importar renderGuardia par
 
 const app = document.getElementById('app')
 
-// Estado global del usuario en memoria
-let usuarioActual = null
+
+let usuarioActual = null // Estado global del usuario en memoria
+let navegando = false  // Evita que dos navegaciones corran al mismo tiempo
 
 // Función para obtener el usuario actual en memoria, usada por otras vistas para mostrar su nombre o verificar su rol 
 // sin hacer otra petición a la API. Se actualiza al iniciar sesión o al verificar sesión activa al cargar cada vista.
 export function getUsuario() { return usuarioActual }
 // Función para actualizar el usuario actual en memoria, por ejemplo al iniciar sesión o al renovar el token.
 export function setUsuario(usuario) { usuarioActual = usuario }
+
+// Redirige al login de forma segura — sin disparar un hashchange
+// que causa un bucle infinito si ya estamos navegando
+export function irAlLogin() {
+    usuarioActual = null
+    if (window.location.hash !== '#/login') {
+        window.location.hash = '#/login'
+    } else {
+        // Ya estamos en #/login, solo renderizar la vista
+        setCss('login.css')
+        app.innerHTML = renderLogin()
+        import('./views/login.js').then(({ initLoginView }) => initLoginView())
+    }
+}
 
 // ─── Intercambio de CSS por vista ────────────────────────────
 function setCss(hoja) {
@@ -49,63 +64,76 @@ function setCss(hoja) {
 
 // ─── Enrutador principal ──────────────────────────────────────
 async function navegar() {
-    const hash = window.location.hash || '#/login'
 
-    // ── Login (ruta pública) ──────────────────────────────────
-    if (hash === '#/login') {
+    // Si ya hay una navegación en curso, ignorar
+    if (navegando) return
+    navegando = true
+
+    try {
+        const hash = window.location.hash || '#/login'
+
+        // ── Login (ruta pública) ──────────────────────────────────
+        if (hash === '#/login') {
+            if (!usuarioActual) {
+                usuarioActual = await verificarSesion()
+            }
+            // Si ya hay sesión activa redirigir a la vista correcta
+            if (usuarioActual) {
+                redirigirPorRol(usuarioActual.rol)
+                return
+            }
+            setCss('login.css')
+            app.innerHTML = renderLogin()
+            const { initLoginView } = await import('./views/login.js')
+            initLoginView()
+            return
+        }
+
+        // ── Rutas protegidas — verificar sesión ───────────────────
         if (!usuarioActual) {
             usuarioActual = await verificarSesion()
         }
-        // Si ya hay sesión activa redirigir a la vista correcta
-        if (usuarioActual) {
-            redirigirPorRol(usuarioActual.rol)
+
+        if (!usuarioActual) { // Si no hay sesión activa, redirigir al login
+            setCss('login.css')
+            app.innerHTML = renderLogin()
+            window.location.hash = '#/login'
+            const { initLoginView } = await import('./views/login.js')
+            initLoginView()
             return
         }
-        setCss('login.css')
-        app.innerHTML = renderLogin()
-        const { initLoginView } = await import('./views/login.js')
-        initLoginView()
-        return
-    }
 
-    // ── Rutas protegidas — verificar sesión ───────────────────
-    if (!usuarioActual) {
-        usuarioActual = await verificarSesion()
-    }
+        // ── Admin ─────────────────────────────────────────────────
+        if (hash === '#/admin') { // Solo permitir acceso a administradores
+            if (usuarioActual.rol !== 'Administrador') {
+                redirigirPorRol(usuarioActual.rol)
+                return
+            }
+            setCss('vehiculos.css')
+            app.innerHTML = renderAdmin()
+            const { initAdminView } = await import('./views/admin.js')
+            initAdminView()
+            return
+        }
 
-    if (!usuarioActual) { // Si no hay sesión activa, redirigir al login
+        // ── Guardia ───────────────────────────────────────────────
+        if (hash === '#/guardia') { // Solo permitir acceso a guardias
+            if (usuarioActual.rol !== 'Guardia') {
+                redirigirPorRol(usuarioActual.rol)
+                return
+            }
+            setCss('vehiculos.css')
+            app.innerHTML = renderGuardia()
+            const { initGuardiaView } = await import('./views/guardia.js')
+            initGuardiaView()
+            return
+        }
+
+        // Hash desconocido → login
         window.location.hash = '#/login'
-        return
+    } finally {
+        navegando = false
     }
-
-    // ── Admin ─────────────────────────────────────────────────
-    if (hash === '#/admin') { // Solo permitir acceso a administradores
-        if (usuarioActual.rol !== 'Administrador') {
-            redirigirPorRol(usuarioActual.rol)
-            return
-        }
-        setCss('vehiculos.css')
-        app.innerHTML = renderAdmin()
-        const { initAdminView } = await import('./views/admin.js')
-        initAdminView()
-        return
-    }
-
-    // ── Guardia ───────────────────────────────────────────────
-    if (hash === '#/guardia') { // Solo permitir acceso a guardias
-        if (usuarioActual.rol !== 'Guardia') {
-            redirigirPorRol(usuarioActual.rol)
-            return
-        }
-        setCss('vehiculos.css')
-        app.innerHTML = renderGuardia()
-        const { initGuardiaView } = await import('./views/guardia.js')
-        initGuardiaView()
-        return
-    }
-
-    // Hash desconocido → login
-    window.location.hash = '#/login'
 }
 
 // Función para redirigir al usuario a la vista correspondiente según su rol. 
