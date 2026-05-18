@@ -79,7 +79,7 @@ export function renderAdmin() {
 
           <div class="d-flex justify-content-between align-items-center mt-3">
             <div class="d-flex align-items-center">
-              <span class="me-2 d-none d-sm-inline">Registros por página:</span>
+              <label for="limitePage" class="me-2 d-none d-sm-inline">Registros por página:</label>
               <select id="limitePage" class="form-select form-select-sm" style="width:auto;">
                 <option value="5" selected>5</option>
                 <option value="10">10</option>
